@@ -45,14 +45,15 @@ body {
   display: none;
   bottom: 12px;
   left: 16px;
-  width: 60px;
+  width: 72px;
   height: 60px;
-  font-size: 60px;
-  line-height: 60px;
-  text-align: center;
   pointer-events: none;
+  background-image: url("./assets/cat-sprites.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
   transform: translateX(0);
   will-change: transform;
+  image-rendering: pixelated;
 }
 
 #engagement-bar {
