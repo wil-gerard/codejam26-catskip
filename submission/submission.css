@@ -1,0 +1,60 @@
+html,
+body {
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  cursor: crosshair;
+}
+
+#overlay-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#cat {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  font-size: 60px;
+  line-height: 60px;
+  text-align: center;
+  pointer-events: none;
+  transition: transform 0.1s ease-out;
+}
+
+#engagement-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: #e0e0e0;
+}
+
+#engagement-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700, #ffa500);
+  width: 0%;
+  transition: width 0.05s linear;
+}
+
+#skip {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 18px;
+  background: rgba(0, 0, 0, 0.8);
+  border: none;
+  font-size: 14px;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  z-index: 100;
+}
+
+#skip:hover {
+  background: rgba(0, 0, 0, 0.95);
+}
