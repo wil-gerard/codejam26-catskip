@@ -61,7 +61,7 @@ body {
   display: none;
   top: 0;
   left: 0;
-  width: 32px;
+  width: 16px;
   height: 34px;
   pointer-events: none;
   background-image: url("./assets/ballguy.png");

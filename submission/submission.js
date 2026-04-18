@@ -2,14 +2,14 @@
   const skipDelayMs = 2000;
   const catBaseOffsetPx = 16;
   const catSpeedPxPerSecond = 160;
-  const toyFrameWidthPx = 32;
+  const toyFrameWidthPx = 16;
   const toyFrameHeightPx = 34;
-  const toyFrameCount = 14;
+  const toyFrameCount = 28;
   const toyGroundOffsetPx = 8;
   const toyGravityPxPerSecond = 1600;
   const toyBounceDamping = 0.52;
   const toyMinimumBounceVelocity = 140;
-  const toyFallFrameCount = 8;
+  const toyFallFrameCount = 12;
   const walkFrames = [
     { x: 8, y: 68 },
     { x: 96, y: 68 },
@@ -85,11 +85,14 @@
     }
 
     if (Math.abs(toyState.velocityY) < toyMinimumBounceVelocity && toyState.y >= toyState.groundY) {
-      setToyFrame(13);
+      setToyFrame(toyFrameCount - 1);
       return;
     }
 
-    const bounceFrameIndex = Math.min(13, 8 + Math.min(toyState.bounceCount, 5));
+    const bounceFrameIndex = Math.min(
+      toyFrameCount - 1,
+      toyFallFrameCount + Math.min(toyState.bounceCount * 3, toyFrameCount - toyFallFrameCount - 1),
+    );
     setToyFrame(bounceFrameIndex);
   }
 
@@ -126,7 +129,7 @@
     } else {
       toyAnimationFrameId = null;
       toyState.lastTimestamp = null;
-      setToyFrame(13);
+      setToyFrame(toyFrameCount - 1);
       renderToyBall();
     }
   }
