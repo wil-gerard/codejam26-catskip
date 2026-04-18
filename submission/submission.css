@@ -59,7 +59,7 @@ body {
 #toy-ball {
   position: absolute;
   display: none;
-  bottom: 8px;
+  top: 0;
   left: 0;
   width: 32px;
   height: 34px;
@@ -69,6 +69,7 @@ body {
   background-position: 0 0;
   image-rendering: pixelated;
   z-index: 2;
+  will-change: top, left, background-position;
 }
 
 #toy-ball.is-visible {

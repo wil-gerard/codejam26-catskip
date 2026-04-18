@@ -5,7 +5,11 @@
   const toyFrameWidthPx = 32;
   const toyFrameHeightPx = 34;
   const toyFrameCount = 14;
-  const toyFrameDurationMs = 45;
+  const toyGroundOffsetPx = 8;
+  const toyGravityPxPerSecond = 1600;
+  const toyBounceDamping = 0.52;
+  const toyMinimumBounceVelocity = 140;
+  const toyFallFrameCount = 8;
   const walkFrames = [
     { x: 8, y: 68 },
     { x: 96, y: 68 },
@@ -23,12 +27,21 @@
   const skipButton = document.getElementById("skip");
   let skipTimerId = null;
   let catAnimationFrameId = null;
-  let toyAnimationTimeoutId = null;
+  let toyAnimationFrameId = null;
   let lastFrameTime = null;
   let lastSpriteFrameTime = null;
   let catX = 0;
   let catDirection = 1;
   let catFrameIndex = 0;
+  let toyState = {
+    x: 0,
+    y: 0,
+    velocityY: 0,
+    groundY: 0,
+    bounceCount: 0,
+    active: false,
+    lastTimestamp: null,
+  };
 
   function hideSkipButton() {
     skipButton.style.display = "none";
@@ -38,33 +51,87 @@
     toyBall.style.backgroundPosition = `-${frameIndex * toyFrameWidthPx}px 0`;
   }
 
-  function clearToyAnimation() {
-    if (toyAnimationTimeoutId !== null) {
-      window.clearTimeout(toyAnimationTimeoutId);
-      toyAnimationTimeoutId = null;
+  function renderToyBall() {
+    toyBall.style.left = `${toyState.x}px`;
+    toyBall.style.top = `${toyState.y}px`;
+  }
+
+  function stopToyAnimation() {
+    if (toyAnimationFrameId !== null) {
+      window.cancelAnimationFrame(toyAnimationFrameId);
+      toyAnimationFrameId = null;
     }
   }
 
   function hideToyBall() {
-    clearToyAnimation();
+    stopToyAnimation();
+    toyState.active = false;
+    toyState.lastTimestamp = null;
     toyBall.classList.remove("is-visible");
     setToyFrame(0);
   }
 
-  function playToyImpactAnimation(frameIndex = 0) {
-    setToyFrame(frameIndex);
+  function updateToyFrame() {
+    const distanceToGround = Math.max(0, toyState.groundY - toyState.y);
 
-    if (frameIndex >= toyFrameCount - 1) {
-      toyAnimationTimeoutId = null;
+    if (distanceToGround > toyFrameHeightPx * 1.5) {
+      const fallProgress = 1 - distanceToGround / Math.max(toyState.groundY, 1);
+      const frameIndex = Math.min(
+        toyFallFrameCount - 1,
+        Math.max(0, Math.floor(fallProgress * toyFallFrameCount)),
+      );
+      setToyFrame(frameIndex);
       return;
     }
 
-    toyAnimationTimeoutId = window.setTimeout(() => {
-      playToyImpactAnimation(frameIndex + 1);
-    }, toyFrameDurationMs);
+    if (Math.abs(toyState.velocityY) < toyMinimumBounceVelocity && toyState.y >= toyState.groundY) {
+      setToyFrame(13);
+      return;
+    }
+
+    const bounceFrameIndex = Math.min(13, 8 + Math.min(toyState.bounceCount, 5));
+    setToyFrame(bounceFrameIndex);
   }
 
-  function dropToyBall(clientX) {
+  function stepToyBall(timestamp) {
+    if (!toyState.active) return;
+
+    if (toyState.lastTimestamp === null) {
+      toyState.lastTimestamp = timestamp;
+    }
+
+    const deltaSeconds = Math.min((timestamp - toyState.lastTimestamp) / 1000, 0.032);
+    toyState.lastTimestamp = timestamp;
+
+    toyState.velocityY += toyGravityPxPerSecond * deltaSeconds;
+    toyState.y += toyState.velocityY * deltaSeconds;
+
+    if (toyState.y >= toyState.groundY) {
+      toyState.y = toyState.groundY;
+
+      if (Math.abs(toyState.velocityY) <= toyMinimumBounceVelocity) {
+        toyState.velocityY = 0;
+        toyState.active = false;
+      } else {
+        toyState.velocityY = -Math.abs(toyState.velocityY) * toyBounceDamping;
+        toyState.bounceCount += 1;
+      }
+    }
+
+    updateToyFrame();
+    renderToyBall();
+
+    if (toyState.active) {
+      toyAnimationFrameId = window.requestAnimationFrame(stepToyBall);
+    } else {
+      toyAnimationFrameId = null;
+      toyState.lastTimestamp = null;
+      setToyFrame(13);
+      renderToyBall();
+    }
+  }
+
+  function dropToyBall(clientX, clientY) {
     const containerRect = overlayContainer.getBoundingClientRect();
     const left = Math.max(
       0,
@@ -73,12 +140,31 @@
         clientX - containerRect.left - toyFrameWidthPx / 2,
       ),
     );
+    const startY = Math.max(
+      0,
+      Math.min(
+        containerRect.height - toyFrameHeightPx,
+        clientY - containerRect.top - toyFrameHeightPx / 2,
+      ),
+    );
+    const groundY = containerRect.height - toyFrameHeightPx - toyGroundOffsetPx;
 
-    clearToyAnimation();
-    toyBall.style.left = `${left}px`;
+    stopToyAnimation();
+    toyState = {
+      x: left,
+      y: startY,
+      velocityY: 0,
+      groundY,
+      bounceCount: 0,
+      active: true,
+      lastTimestamp: null,
+    };
+
     toyBall.style.height = `${toyFrameHeightPx}px`;
     toyBall.classList.add("is-visible");
-    playToyImpactAnimation();
+    setToyFrame(0);
+    renderToyBall();
+    toyAnimationFrameId = window.requestAnimationFrame(stepToyBall);
   }
 
   function renderCatFrame() {
@@ -192,6 +278,6 @@
 
   overlayContainer.addEventListener("click", (event) => {
     if (!body.classList.contains("engagement-active")) return;
-    dropToyBall(event.clientX);
+    dropToyBall(event.clientX, event.clientY);
   });
 })(window, document);
