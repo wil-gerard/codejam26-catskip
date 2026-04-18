@@ -2,10 +2,14 @@
   const skipDelayMs = 2000;
   const catBaseOffsetPx = 16;
   const catSpeedPxPerSecond = 160;
+  const groundLaneOffsetPx = 6;
   const toyFrameWidthPx = 16;
   const toyFrameHeightPx = 34;
   const toyFrameCount = 28;
-  const toyGroundOffsetPx = 8;
+  const toyVisibleHeightPx = 32;
+  const toyRestFrameIndex = 10;
+  const toyImpactFrameStartIndex = 10;
+  const toyImpactFrameEndIndex = 18;
   const toyGravityPxPerSecond = 1600;
   const toyBounceDamping = 0.52;
   const toyMinimumBounceVelocity = 140;
@@ -85,13 +89,13 @@
     }
 
     if (Math.abs(toyState.velocityY) < toyMinimumBounceVelocity && toyState.y >= toyState.groundY) {
-      setToyFrame(toyFrameCount - 1);
+      setToyFrame(toyRestFrameIndex);
       return;
     }
 
     const bounceFrameIndex = Math.min(
-      toyFrameCount - 1,
-      toyFallFrameCount + Math.min(toyState.bounceCount * 3, toyFrameCount - toyFallFrameCount - 1),
+      toyImpactFrameEndIndex,
+      toyImpactFrameStartIndex + Math.min(toyState.bounceCount * 2, toyImpactFrameEndIndex - toyImpactFrameStartIndex),
     );
     setToyFrame(bounceFrameIndex);
   }
@@ -129,7 +133,7 @@
     } else {
       toyAnimationFrameId = null;
       toyState.lastTimestamp = null;
-      setToyFrame(toyFrameCount - 1);
+      setToyFrame(toyRestFrameIndex);
       renderToyBall();
     }
   }
@@ -150,7 +154,7 @@
         clientY - containerRect.top - toyFrameHeightPx / 2,
       ),
     );
-    const groundY = containerRect.height - toyFrameHeightPx - toyGroundOffsetPx;
+    const groundY = containerRect.height - toyVisibleHeightPx - groundLaneOffsetPx;
 
     stopToyAnimation();
     toyState = {
