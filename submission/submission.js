@@ -1,11 +1,7 @@
 (function (window, document) {
   const skipDelayMs = 2000;
 
-  // This is how you tell the parent window that the ad was successfully skipped.
-  function adSuccess() {
-    window.top.postMessage({ type: "success" }, "*");
-  }
-
+  const body = document.body;
   const skipButton = document.getElementById("skip");
   let skipTimerId = null;
 
@@ -13,9 +9,18 @@
     skipButton.style.display = "none";
   }
 
+  function enterEngagementMode() {
+    body.classList.add("engagement-active");
+  }
+
+  function resetOverlayState() {
+    body.classList.remove("engagement-active");
+    hideSkipButton();
+  }
+
   function scheduleSkipButton() {
     window.clearTimeout(skipTimerId);
-    hideSkipButton();
+    resetOverlayState();
     skipTimerId = window.setTimeout(() => {
       skipButton.style.display = "block";
     }, skipDelayMs);
@@ -34,7 +39,7 @@
     // or other interaction instead (see examples/survey).
     if (event.data.type === "adFinished") {
       window.clearTimeout(skipTimerId);
-      hideSkipButton();
+      resetOverlayState();
       window.top.postMessage({ type: "fail" }, "*");
     }
   });
@@ -42,7 +47,7 @@
   // Your ad overlay code goes here, we've added a simple example below:
   skipButton.addEventListener("click", () => {
     window.clearTimeout(skipTimerId);
+    enterEngagementMode();
     hideSkipButton();
-    adSuccess();
   });
 })(window, document);

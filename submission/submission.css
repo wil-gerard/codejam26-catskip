@@ -18,8 +18,33 @@ body {
   overflow: hidden;
 }
 
+#engagement-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.28));
+  pointer-events: none;
+}
+
+#engagement-copy {
+  margin: 0;
+  max-width: 340px;
+  color: white;
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.65);
+}
+
 #cat {
   position: absolute;
+  display: none;
+  bottom: 12px;
+  left: 16px;
   width: 60px;
   height: 60px;
   font-size: 60px;
@@ -34,6 +59,7 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
+  display: none;
   height: 6px;
   background: #e0e0e0;
 }
@@ -62,4 +88,13 @@ body {
 
 #skip:hover {
   background: rgba(0, 0, 0, 0.95);
+}
+
+body.engagement-active #engagement-overlay {
+  display: flex;
+}
+
+body.engagement-active #engagement-bar,
+body.engagement-active #cat {
+  display: block;
 }
