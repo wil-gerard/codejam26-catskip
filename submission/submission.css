@@ -51,7 +51,8 @@ body {
   line-height: 60px;
   text-align: center;
   pointer-events: none;
-  transition: transform 0.1s ease-out;
+  transform: translateX(0);
+  will-change: transform;
 }
 
 #engagement-bar {
