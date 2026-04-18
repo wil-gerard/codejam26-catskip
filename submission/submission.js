@@ -2,6 +2,10 @@
   const skipDelayMs = 2000;
   const catBaseOffsetPx = 16;
   const catSpeedPxPerSecond = 160;
+  const toyFrameWidthPx = 32;
+  const toyFrameHeightPx = 34;
+  const toyFrameCount = 14;
+  const toyFrameDurationMs = 45;
   const walkFrames = [
     { x: 8, y: 68 },
     { x: 96, y: 68 },
@@ -15,9 +19,11 @@
   const body = document.body;
   const overlayContainer = document.getElementById("overlay-container");
   const cat = document.getElementById("cat");
+  const toyBall = document.getElementById("toy-ball");
   const skipButton = document.getElementById("skip");
   let skipTimerId = null;
   let catAnimationFrameId = null;
+  let toyAnimationTimeoutId = null;
   let lastFrameTime = null;
   let lastSpriteFrameTime = null;
   let catX = 0;
@@ -26,6 +32,53 @@
 
   function hideSkipButton() {
     skipButton.style.display = "none";
+  }
+
+  function setToyFrame(frameIndex) {
+    toyBall.style.backgroundPosition = `-${frameIndex * toyFrameWidthPx}px 0`;
+  }
+
+  function clearToyAnimation() {
+    if (toyAnimationTimeoutId !== null) {
+      window.clearTimeout(toyAnimationTimeoutId);
+      toyAnimationTimeoutId = null;
+    }
+  }
+
+  function hideToyBall() {
+    clearToyAnimation();
+    toyBall.classList.remove("is-visible");
+    setToyFrame(0);
+  }
+
+  function playToyImpactAnimation(frameIndex = 0) {
+    setToyFrame(frameIndex);
+
+    if (frameIndex >= toyFrameCount - 1) {
+      toyAnimationTimeoutId = null;
+      return;
+    }
+
+    toyAnimationTimeoutId = window.setTimeout(() => {
+      playToyImpactAnimation(frameIndex + 1);
+    }, toyFrameDurationMs);
+  }
+
+  function dropToyBall(clientX) {
+    const containerRect = overlayContainer.getBoundingClientRect();
+    const left = Math.max(
+      0,
+      Math.min(
+        containerRect.width - toyFrameWidthPx,
+        clientX - containerRect.left - toyFrameWidthPx / 2,
+      ),
+    );
+
+    clearToyAnimation();
+    toyBall.style.left = `${left}px`;
+    toyBall.style.height = `${toyFrameHeightPx}px`;
+    toyBall.classList.add("is-visible");
+    playToyImpactAnimation();
   }
 
   function renderCatFrame() {
@@ -99,6 +152,7 @@
   function resetOverlayState() {
     body.classList.remove("engagement-active");
     stopCatAnimation();
+    hideToyBall();
     hideSkipButton();
   }
 
@@ -129,9 +183,15 @@
   });
 
   // Your ad overlay code goes here, we've added a simple example below:
-  skipButton.addEventListener("click", () => {
+  skipButton.addEventListener("click", (event) => {
+    event.stopPropagation();
     window.clearTimeout(skipTimerId);
     enterEngagementMode();
     hideSkipButton();
+  });
+
+  overlayContainer.addEventListener("click", (event) => {
+    if (!body.classList.contains("engagement-active")) return;
+    dropToyBall(event.clientX);
   });
 })(window, document);

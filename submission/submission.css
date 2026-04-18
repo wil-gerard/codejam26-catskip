@@ -56,6 +56,25 @@ body {
   image-rendering: pixelated;
 }
 
+#toy-ball {
+  position: absolute;
+  display: none;
+  bottom: 8px;
+  left: 0;
+  width: 32px;
+  height: 34px;
+  pointer-events: none;
+  background-image: url("./assets/ballguy.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  image-rendering: pixelated;
+  z-index: 2;
+}
+
+#toy-ball.is-visible {
+  display: block;
+}
+
 #engagement-bar {
   position: absolute;
   bottom: 0;
