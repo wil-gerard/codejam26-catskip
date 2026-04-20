@@ -17,6 +17,14 @@ body {
   overflow: hidden;
 }
 
+#engagement-dimmer {
+  position: absolute;
+  inset: 0;
+  display: none;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
 #engagement-overlay {
   position: absolute;
   inset: 0;
@@ -24,7 +32,6 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.28));
   pointer-events: none;
 }
 
@@ -109,6 +116,10 @@ body {
 
 #skip:hover {
   background: rgba(0, 0, 0, 0.95);
+}
+
+body.engagement-active #engagement-dimmer {
+  display: block;
 }
 
 body.engagement-active #engagement-overlay {
