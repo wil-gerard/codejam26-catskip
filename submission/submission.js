@@ -15,6 +15,7 @@
   const toyMinimumBounceVelocity = 140;
   const toyFallFrameCount = 12;
   const catIdleFrame = { x: 252, y: 0 };
+  const catDistractedFrame = { x: 84, y: 0 };
   const walkFrames = [
     { x: 8, y: 68 },
     { x: 96, y: 68 },
@@ -27,6 +28,9 @@
   const catTargetSnapDistancePx = 8;
   const catToyInspectOffsetPx = 14;
   const catRewardMinTravelDistancePx = 192;
+  const catDistractionChance = 0.22;
+  const catDistractionDelayMinSeconds = 0.35;
+  const catDistractionDelayMaxSeconds = 0.95;
   const engagementDecayPerSecond = 4;
   const minPlaybackRate = 0.45;
   const maxPlaybackRate = 1;
@@ -49,6 +53,8 @@
   let catDirection = 1;
   let catFrameIndex = 0;
   let catTargetX = null;
+  let catIsDistracted = false;
+  let catDistractionTimeRemaining = null;
   let engagementProgress = 0;
   let hasRewardedCurrentToy = false;
   let currentToyCanReward = false;
@@ -225,6 +231,12 @@
     toyBall.classList.add("is-visible");
     hasRewardedCurrentToy = false;
     currentToyCanReward = Math.abs(left - catX) >= catRewardMinTravelDistancePx;
+    catIsDistracted = false;
+    catDistractionTimeRemaining =
+      Math.random() < catDistractionChance
+        ? catDistractionDelayMinSeconds +
+          Math.random() * (catDistractionDelayMaxSeconds - catDistractionDelayMinSeconds)
+        : null;
     setToyFrame(0);
     renderToyBall();
     if (left >= catX) {
@@ -246,7 +258,14 @@
   }
 
   function renderCatFrame() {
-    const frame = catTargetX === null ? catIdleFrame : walkFrames[catFrameIndex];
+    let frame = catIdleFrame;
+
+    if (catTargetX !== null) {
+      frame = walkFrames[catFrameIndex];
+    } else if (catIsDistracted) {
+      frame = catDistractedFrame;
+    }
+
     cat.style.backgroundPosition = `-${frame.x}px -${frame.y}px`;
   }
 
@@ -262,6 +281,8 @@
     catDirection = 1;
     catFrameIndex = 0;
     catTargetX = null;
+    catIsDistracted = false;
+    catDistractionTimeRemaining = null;
     renderCatFrame();
     cat.style.transform = "translateX(0) scaleX(1)";
   }
@@ -279,11 +300,32 @@
     lastFrameTime = timestamp;
 
     if (catTargetX !== null) {
+      if (catDistractionTimeRemaining !== null) {
+        catDistractionTimeRemaining -= frameDeltaSeconds;
+
+        if (catDistractionTimeRemaining <= 0) {
+          catTargetX = null;
+          catFrameIndex = 0;
+          catIsDistracted = true;
+          catDistractionTimeRemaining = null;
+          renderCatFrame();
+        }
+      }
+
+      if (catTargetX === null) {
+        const facingScale = catDirection === 1 ? -1 : 1;
+        cat.style.transform = `translateX(${catX}px) scaleX(${facingScale})`;
+        catAnimationFrameId = window.requestAnimationFrame(stepCat);
+        return;
+      }
+
       const deltaToTarget = catTargetX - catX;
 
       if (Math.abs(deltaToTarget) <= catTargetSnapDistancePx) {
         catX = catTargetX;
         catTargetX = null;
+        catIsDistracted = false;
+        catDistractionTimeRemaining = null;
         catFrameIndex = 0;
         renderCatFrame();
         if (!hasRewardedCurrentToy && currentToyCanReward) {
@@ -299,6 +341,8 @@
         if ((catDirection === 1 && catX > catTargetX) || (catDirection === -1 && catX < catTargetX)) {
           catX = catTargetX;
           catTargetX = null;
+          catIsDistracted = false;
+          catDistractionTimeRemaining = null;
           catFrameIndex = 0;
           renderCatFrame();
           if (!hasRewardedCurrentToy && currentToyCanReward) {
