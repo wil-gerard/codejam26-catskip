@@ -14,6 +14,7 @@
   const toyBounceDamping = 0.52;
   const toyMinimumBounceVelocity = 140;
   const toyFallFrameCount = 12;
+  const catIdleFrame = { x: 252, y: 0 };
   const walkFrames = [
     { x: 8, y: 68 },
     { x: 96, y: 68 },
@@ -23,6 +24,7 @@
     { x: 444, y: 68 },
   ];
   const catFrameDurationMs = 110;
+  const catTargetSnapDistancePx = 8;
 
   const body = document.body;
   const overlayContainer = document.getElementById("overlay-container");
@@ -37,6 +39,7 @@
   let catX = 0;
   let catDirection = 1;
   let catFrameIndex = 0;
+  let catTargetX = null;
   let toyState = {
     x: 0,
     y: 0,
@@ -171,11 +174,18 @@
     toyBall.classList.add("is-visible");
     setToyFrame(0);
     renderToyBall();
+    catTargetX = Math.max(
+      0,
+      Math.min(
+        overlayContainer.clientWidth - cat.offsetWidth - catBaseOffsetPx * 2,
+        left - (cat.offsetWidth - toyFrameWidthPx) / 2,
+      ),
+    );
     toyAnimationFrameId = window.requestAnimationFrame(stepToyBall);
   }
 
   function renderCatFrame() {
-    const frame = walkFrames[catFrameIndex];
+    const frame = catTargetX === null ? catIdleFrame : walkFrames[catFrameIndex];
     cat.style.backgroundPosition = `-${frame.x}px -${frame.y}px`;
   }
 
@@ -190,6 +200,7 @@
     catX = 0;
     catDirection = 1;
     catFrameIndex = 0;
+    catTargetX = null;
     renderCatFrame();
     cat.style.transform = "translateX(0) scaleX(1)";
   }
@@ -206,22 +217,28 @@
     const frameDeltaSeconds = (timestamp - lastFrameTime) / 1000;
     lastFrameTime = timestamp;
 
-    const maxX = Math.max(
-      0,
-      overlayContainer.clientWidth - cat.offsetWidth - catBaseOffsetPx * 2,
-    );
+    if (catTargetX !== null) {
+      const deltaToTarget = catTargetX - catX;
 
-    catX += catDirection * catSpeedPxPerSecond * frameDeltaSeconds;
+      if (Math.abs(deltaToTarget) <= catTargetSnapDistancePx) {
+        catX = catTargetX;
+        catTargetX = null;
+        catFrameIndex = 0;
+        renderCatFrame();
+      } else {
+        catDirection = deltaToTarget > 0 ? 1 : -1;
+        catX += catDirection * catSpeedPxPerSecond * frameDeltaSeconds;
 
-    if (catX >= maxX) {
-      catX = maxX;
-      catDirection = -1;
-    } else if (catX <= 0) {
-      catX = 0;
-      catDirection = 1;
+        if ((catDirection === 1 && catX > catTargetX) || (catDirection === -1 && catX < catTargetX)) {
+          catX = catTargetX;
+          catTargetX = null;
+          catFrameIndex = 0;
+          renderCatFrame();
+        }
+      }
     }
 
-    if (timestamp - lastSpriteFrameTime >= catFrameDurationMs) {
+    if (catTargetX !== null && timestamp - lastSpriteFrameTime >= catFrameDurationMs) {
       catFrameIndex = (catFrameIndex + 1) % walkFrames.length;
       lastSpriteFrameTime = timestamp;
       renderCatFrame();
@@ -234,6 +251,7 @@
 
   function startCatAnimation() {
     stopCatAnimation();
+    renderCatFrame();
     catAnimationFrameId = window.requestAnimationFrame(stepCat);
   }
 
