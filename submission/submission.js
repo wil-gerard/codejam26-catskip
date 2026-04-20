@@ -31,6 +31,7 @@
   const overlayContainer = document.getElementById("overlay-container");
   const cat = document.getElementById("cat");
   const toyBall = document.getElementById("toy-ball");
+  const engagementFill = document.getElementById("engagement-fill");
   const skipButton = document.getElementById("skip");
   let skipTimerId = null;
   let catAnimationFrameId = null;
@@ -41,6 +42,8 @@
   let catDirection = 1;
   let catFrameIndex = 0;
   let catTargetX = null;
+  let engagementProgress = 0;
+  let hasRewardedCurrentToy = false;
   let toyState = {
     x: 0,
     y: 0,
@@ -53,6 +56,11 @@
 
   function hideSkipButton() {
     skipButton.style.display = "none";
+  }
+
+  function setEngagementProgress(value) {
+    engagementProgress = Math.max(0, Math.min(100, value));
+    engagementFill.style.width = `${engagementProgress}%`;
   }
 
   function setToyFrame(frameIndex) {
@@ -75,6 +83,7 @@
     stopToyAnimation();
     toyState.active = false;
     toyState.lastTimestamp = null;
+    hasRewardedCurrentToy = false;
     toyBall.classList.remove("is-visible");
     setToyFrame(0);
   }
@@ -173,6 +182,7 @@
 
     toyBall.style.height = `${toyFrameHeightPx}px`;
     toyBall.classList.add("is-visible");
+    hasRewardedCurrentToy = false;
     setToyFrame(0);
     renderToyBall();
     if (left >= catX) {
@@ -234,6 +244,10 @@
         catTargetX = null;
         catFrameIndex = 0;
         renderCatFrame();
+        if (!hasRewardedCurrentToy) {
+          setEngagementProgress(engagementProgress + 22);
+          hasRewardedCurrentToy = true;
+        }
       } else {
         catDirection = deltaToTarget > 0 ? 1 : -1;
         catX += catDirection * catSpeedPxPerSecond * frameDeltaSeconds;
@@ -243,6 +257,10 @@
           catTargetX = null;
           catFrameIndex = 0;
           renderCatFrame();
+          if (!hasRewardedCurrentToy) {
+            setEngagementProgress(engagementProgress + 22);
+            hasRewardedCurrentToy = true;
+          }
         }
       }
     }
@@ -273,6 +291,7 @@
     body.classList.remove("engagement-active");
     stopCatAnimation();
     hideToyBall();
+    setEngagementProgress(0);
     hideSkipButton();
   }
 
