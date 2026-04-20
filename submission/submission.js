@@ -27,6 +27,7 @@
   const catTargetSnapDistancePx = 8;
   const catToyInspectOffsetPx = 14;
   const catRewardMinTravelDistancePx = 192;
+  const engagementDecayPerSecond = 4;
 
   const body = document.body;
   const overlayContainer = document.getElementById("overlay-container");
@@ -284,6 +285,10 @@
       catFrameIndex = (catFrameIndex + 1) % walkFrames.length;
       lastSpriteFrameTime = timestamp;
       renderCatFrame();
+    }
+
+    if (!hasCompleted && engagementProgress > 0) {
+      setEngagementProgress(engagementProgress - frameDeltaSeconds * engagementDecayPerSecond);
     }
 
     const facingScale = catDirection === 1 ? -1 : 1;
