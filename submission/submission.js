@@ -40,6 +40,7 @@
 
   const body = document.body;
   const overlayContainer = document.getElementById("overlay-container");
+  const feedbackLayer = document.getElementById("feedback-layer");
   const cat = document.getElementById("cat");
   const toyBall = document.getElementById("toy-ball");
   const engagementFill = document.getElementById("engagement-fill");
@@ -74,6 +75,22 @@
 
   function hideSkipButton() {
     skipButton.style.display = "none";
+  }
+
+  function showFeedback(message, x = null) {
+    const toast = document.createElement("div");
+    toast.className = "feedback-toast";
+    toast.textContent = message;
+
+    if (typeof x === "number") {
+      toast.style.left = `${x}px`;
+      toast.style.transform = "translate(-50%, 0)";
+    }
+
+    feedbackLayer.appendChild(toast);
+    window.setTimeout(() => {
+      toast.remove();
+    }, 1700);
   }
 
   function adSuccess() {
@@ -215,6 +232,7 @@
       ),
     );
     const groundY = containerRect.height - toyVisibleHeightPx - groundLaneOffsetPx;
+    const toyTooClose = Math.abs(left - catX) < catRewardMinTravelDistancePx;
 
     stopToyAnimation();
     toyState = {
@@ -230,7 +248,7 @@
     toyBall.style.height = `${toyFrameHeightPx}px`;
     toyBall.classList.add("is-visible");
     hasRewardedCurrentToy = false;
-    currentToyCanReward = Math.abs(left - catX) >= catRewardMinTravelDistancePx;
+    currentToyCanReward = !toyTooClose;
     catIsDistracted = false;
     catDistractionTimeRemaining =
       Math.random() < catDistractionChance
@@ -254,6 +272,11 @@
         catTargetX,
       ),
     );
+
+    if (toyTooClose) {
+      showFeedback("Too close for progress", left + toyFrameWidthPx / 2);
+    }
+
     toyAnimationFrameId = window.requestAnimationFrame(stepToyBall);
   }
 
@@ -309,6 +332,7 @@
           catIsDistracted = true;
           catDistractionTimeRemaining = null;
           renderCatFrame();
+          showFeedback("Cat got bored", catX + cat.offsetWidth / 2);
         }
       }
 

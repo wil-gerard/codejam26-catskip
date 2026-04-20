@@ -48,6 +48,54 @@ body {
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.65);
 }
 
+#feedback-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.feedback-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 92px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(20, 20, 20, 0.72);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  transform: translate(-50%, 0);
+  opacity: 0;
+  animation: feedback-float 1.6s ease-out forwards;
+}
+
+@keyframes feedback-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.96);
+  }
+
+  12% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -18px) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -34px) scale(1.02);
+  }
+}
+
 #cat {
   position: absolute;
   display: none;
