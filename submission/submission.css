@@ -6,7 +6,6 @@ body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
-  cursor: crosshair;
   overflow: hidden;
 }
 
@@ -114,6 +113,11 @@ body {
 
 body.engagement-active #engagement-overlay {
   display: flex;
+}
+
+body.engagement-active,
+body.engagement-active #overlay-container {
+  cursor: url("./assets/ball-cursor.png") 10 10, pointer;
 }
 
 body.engagement-active #engagement-bar,
