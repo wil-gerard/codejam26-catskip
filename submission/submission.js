@@ -26,6 +26,7 @@
   const catFrameDurationMs = 110;
   const catTargetSnapDistancePx = 8;
   const catToyInspectOffsetPx = 14;
+  const catRewardMinTravelDistancePx = 192;
 
   const body = document.body;
   const overlayContainer = document.getElementById("overlay-container");
@@ -44,6 +45,7 @@
   let catTargetX = null;
   let engagementProgress = 0;
   let hasRewardedCurrentToy = false;
+  let currentToyCanReward = false;
   let toyState = {
     x: 0,
     y: 0,
@@ -84,6 +86,7 @@
     toyState.active = false;
     toyState.lastTimestamp = null;
     hasRewardedCurrentToy = false;
+    currentToyCanReward = false;
     toyBall.classList.remove("is-visible");
     setToyFrame(0);
   }
@@ -183,6 +186,7 @@
     toyBall.style.height = `${toyFrameHeightPx}px`;
     toyBall.classList.add("is-visible");
     hasRewardedCurrentToy = false;
+    currentToyCanReward = Math.abs(left - catX) >= catRewardMinTravelDistancePx;
     setToyFrame(0);
     renderToyBall();
     if (left >= catX) {
@@ -244,7 +248,7 @@
         catTargetX = null;
         catFrameIndex = 0;
         renderCatFrame();
-        if (!hasRewardedCurrentToy) {
+        if (!hasRewardedCurrentToy && currentToyCanReward) {
           setEngagementProgress(engagementProgress + 22);
           hasRewardedCurrentToy = true;
         }
@@ -257,7 +261,7 @@
           catTargetX = null;
           catFrameIndex = 0;
           renderCatFrame();
-          if (!hasRewardedCurrentToy) {
+          if (!hasRewardedCurrentToy && currentToyCanReward) {
             setEngagementProgress(engagementProgress + 22);
             hasRewardedCurrentToy = true;
           }
