@@ -25,6 +25,7 @@
   ];
   const catFrameDurationMs = 110;
   const catTargetSnapDistancePx = 8;
+  const catToyInspectOffsetPx = 14;
 
   const body = document.body;
   const overlayContainer = document.getElementById("overlay-container");
@@ -174,11 +175,19 @@
     toyBall.classList.add("is-visible");
     setToyFrame(0);
     renderToyBall();
+    if (left >= catX) {
+      catDirection = 1;
+      catTargetX = left - (cat.offsetWidth - catToyInspectOffsetPx);
+    } else {
+      catDirection = -1;
+      catTargetX = left + toyFrameWidthPx - catToyInspectOffsetPx;
+    }
+
     catTargetX = Math.max(
       0,
       Math.min(
         overlayContainer.clientWidth - cat.offsetWidth - catBaseOffsetPx * 2,
-        left - (cat.offsetWidth - toyFrameWidthPx) / 2,
+        catTargetX,
       ),
     );
     toyAnimationFrameId = window.requestAnimationFrame(stepToyBall);
