@@ -46,6 +46,7 @@
   let engagementProgress = 0;
   let hasRewardedCurrentToy = false;
   let currentToyCanReward = false;
+  let hasCompleted = false;
   let toyState = {
     x: 0,
     y: 0,
@@ -60,9 +61,19 @@
     skipButton.style.display = "none";
   }
 
+  function adSuccess() {
+    if (hasCompleted) return;
+    hasCompleted = true;
+    window.top.postMessage({ type: "success" }, "*");
+  }
+
   function setEngagementProgress(value) {
     engagementProgress = Math.max(0, Math.min(100, value));
     engagementFill.style.width = `${engagementProgress}%`;
+
+    if (engagementProgress >= 100) {
+      adSuccess();
+    }
   }
 
   function setToyFrame(frameIndex) {
@@ -295,6 +306,7 @@
     body.classList.remove("engagement-active");
     stopCatAnimation();
     hideToyBall();
+    hasCompleted = false;
     setEngagementProgress(0);
     hideSkipButton();
   }
