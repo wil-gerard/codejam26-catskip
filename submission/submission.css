@@ -134,12 +134,12 @@ body {
 
 #engagement-meter {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
   display: none;
-  padding: 10px 12px 12px;
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0), rgba(10, 10, 10, 0.42));
+  padding: 10px 12px 8px;
+  background: linear-gradient(180deg, rgba(10, 10, 10, 0.52), rgba(10, 10, 10, 0));
 }
 
 #engagement-label {
