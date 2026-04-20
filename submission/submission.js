@@ -28,6 +28,11 @@
   const catToyInspectOffsetPx = 14;
   const catRewardMinTravelDistancePx = 192;
   const engagementDecayPerSecond = 4;
+  const minPlaybackRate = 0.45;
+  const maxPlaybackRate = 1;
+  const rewardPlaybackBoost = 0.55;
+  const rewardPlaybackBoostDecayPerSecond = 1.8;
+  const rewardPlaybackHoldSeconds = 1.1;
 
   const body = document.body;
   const overlayContainer = document.getElementById("overlay-container");
@@ -48,6 +53,9 @@
   let hasRewardedCurrentToy = false;
   let currentToyCanReward = false;
   let hasCompleted = false;
+  let currentPlaybackRate = 1;
+  let playbackBoost = 0;
+  let playbackBoostHoldRemaining = 0;
   let toyState = {
     x: 0,
     y: 0,
@@ -68,9 +76,27 @@
     window.top.postMessage({ type: "success" }, "*");
   }
 
+  function sendPlaybackRate(rate) {
+    if (!body.classList.contains("engagement-active")) return;
+
+    const clampedRate = Math.max(minPlaybackRate, Math.min(maxPlaybackRate, rate));
+
+    if (Math.abs(clampedRate - currentPlaybackRate) < 0.01) return;
+
+    currentPlaybackRate = clampedRate;
+    window.top.postMessage({ type: "setPlaybackRate", value: clampedRate }, "*");
+  }
+
+  function updatePlaybackRate() {
+    const basePlaybackRate =
+      minPlaybackRate + (engagementProgress / 100) * (maxPlaybackRate - minPlaybackRate);
+    sendPlaybackRate(basePlaybackRate + playbackBoost);
+  }
+
   function setEngagementProgress(value) {
     engagementProgress = Math.max(0, Math.min(100, value));
     engagementFill.style.width = `${engagementProgress}%`;
+    updatePlaybackRate();
 
     if (engagementProgress >= 100) {
       adSuccess();
@@ -261,6 +287,8 @@
         catFrameIndex = 0;
         renderCatFrame();
         if (!hasRewardedCurrentToy && currentToyCanReward) {
+          playbackBoost = rewardPlaybackBoost;
+          playbackBoostHoldRemaining = rewardPlaybackHoldSeconds;
           setEngagementProgress(engagementProgress + 22);
           hasRewardedCurrentToy = true;
         }
@@ -274,6 +302,8 @@
           catFrameIndex = 0;
           renderCatFrame();
           if (!hasRewardedCurrentToy && currentToyCanReward) {
+            playbackBoost = rewardPlaybackBoost;
+            playbackBoostHoldRemaining = rewardPlaybackHoldSeconds;
             setEngagementProgress(engagementProgress + 22);
             hasRewardedCurrentToy = true;
           }
@@ -291,6 +321,22 @@
       setEngagementProgress(engagementProgress - frameDeltaSeconds * engagementDecayPerSecond);
     }
 
+    if (playbackBoost > 0) {
+      if (playbackBoostHoldRemaining > 0) {
+        playbackBoostHoldRemaining = Math.max(
+          0,
+          playbackBoostHoldRemaining - frameDeltaSeconds,
+        );
+      } else {
+        playbackBoost = Math.max(
+          0,
+          playbackBoost - frameDeltaSeconds * rewardPlaybackBoostDecayPerSecond,
+        );
+      }
+
+      updatePlaybackRate();
+    }
+
     const facingScale = catDirection === 1 ? -1 : 1;
     cat.style.transform = `translateX(${catX}px) scaleX(${facingScale})`;
     catAnimationFrameId = window.requestAnimationFrame(stepCat);
@@ -304,6 +350,10 @@
 
   function enterEngagementMode() {
     body.classList.add("engagement-active");
+    currentPlaybackRate = 1;
+    playbackBoost = 0;
+    playbackBoostHoldRemaining = 0;
+    updatePlaybackRate();
     startCatAnimation();
   }
 
@@ -312,6 +362,10 @@
     stopCatAnimation();
     hideToyBall();
     hasCompleted = false;
+    currentPlaybackRate = 1;
+    playbackBoost = 0;
+    playbackBoostHoldRemaining = 0;
+    window.top.postMessage({ type: "setPlaybackRate", value: 1 }, "*");
     setEngagementProgress(0);
     hideSkipButton();
   }
