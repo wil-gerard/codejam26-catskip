@@ -45,8 +45,6 @@
   const toyBall = document.getElementById("toy-ball");
   const engagementFill = document.getElementById("engagement-fill");
   const skipButton = document.getElementById("skip");
-  const catMeowSound = new Audio("./assets/meow.ogg");
-  const catBoredMeowSound = new Audio("./assets/bored-meow.ogg");
   let skipTimerId = null;
   let catAnimationFrameId = null;
   let toyAnimationFrameId = null;
@@ -77,25 +75,6 @@
 
   function hideSkipButton() {
     skipButton.style.display = "none";
-  }
-
-  catMeowSound.preload = "auto";
-  catMeowSound.volume = 0.55;
-  catBoredMeowSound.preload = "auto";
-  catBoredMeowSound.volume = 0.55;
-
-  function playSound(audio) {
-    audio.pause();
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
-  }
-
-  function playMeow() {
-    playSound(catMeowSound);
-  }
-
-  function playBoredMeow() {
-    playSound(catBoredMeowSound);
   }
 
   function showFeedback(message, x = null) {
@@ -353,7 +332,6 @@
           catIsDistracted = true;
           catDistractionTimeRemaining = null;
           renderCatFrame();
-          playBoredMeow();
           showFeedback("Cat got bored", catX + cat.offsetWidth / 2);
         }
       }
@@ -377,7 +355,6 @@
         if (!hasRewardedCurrentToy && currentToyCanReward) {
           playbackBoost = rewardPlaybackBoost;
           playbackBoostHoldRemaining = rewardPlaybackHoldSeconds;
-          playMeow();
           setEngagementProgress(engagementProgress + 22);
           hasRewardedCurrentToy = true;
         }
@@ -395,7 +372,6 @@
           if (!hasRewardedCurrentToy && currentToyCanReward) {
             playbackBoost = rewardPlaybackBoost;
             playbackBoostHoldRemaining = rewardPlaybackHoldSeconds;
-            playMeow();
             setEngagementProgress(engagementProgress + 22);
             hasRewardedCurrentToy = true;
           }
