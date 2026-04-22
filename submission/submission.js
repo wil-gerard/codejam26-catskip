@@ -45,6 +45,7 @@
   const toyBall = document.getElementById("toy-ball");
   const engagementFill = document.getElementById("engagement-fill");
   const skipButton = document.getElementById("skip");
+  const rewardMeow = new window.Audio("./assets/Meow.ogg");
   let skipTimerId = null;
   let catAnimationFrameId = null;
   let toyAnimationFrameId = null;
@@ -72,6 +73,9 @@
     active: false,
     lastTimestamp: null,
   };
+
+  rewardMeow.preload = "auto";
+  rewardMeow.volume = 0.22;
 
   function hideSkipButton() {
     skipButton.style.display = "none";
@@ -124,6 +128,19 @@
     if (engagementProgress >= 100) {
       adSuccess();
     }
+  }
+
+  function playRewardMeow() {
+    rewardMeow.currentTime = 0;
+    rewardMeow.play().catch(() => {});
+  }
+
+  function rewardToyCatch() {
+    playbackBoost = rewardPlaybackBoost;
+    playbackBoostHoldRemaining = rewardPlaybackHoldSeconds;
+    setEngagementProgress(engagementProgress + 22);
+    playRewardMeow();
+    hasRewardedCurrentToy = true;
   }
 
   function setToyFrame(frameIndex) {
@@ -353,10 +370,7 @@
         catFrameIndex = 0;
         renderCatFrame();
         if (!hasRewardedCurrentToy && currentToyCanReward) {
-          playbackBoost = rewardPlaybackBoost;
-          playbackBoostHoldRemaining = rewardPlaybackHoldSeconds;
-          setEngagementProgress(engagementProgress + 22);
-          hasRewardedCurrentToy = true;
+          rewardToyCatch();
         }
       } else {
         catDirection = deltaToTarget > 0 ? 1 : -1;
@@ -370,10 +384,7 @@
           catFrameIndex = 0;
           renderCatFrame();
           if (!hasRewardedCurrentToy && currentToyCanReward) {
-            playbackBoost = rewardPlaybackBoost;
-            playbackBoostHoldRemaining = rewardPlaybackHoldSeconds;
-            setEngagementProgress(engagementProgress + 22);
-            hasRewardedCurrentToy = true;
+            rewardToyCatch();
           }
         }
       }
