@@ -28,15 +28,16 @@
   const catTargetSnapDistancePx = 8;
   const catToyInspectOffsetPx = 14;
   const catRewardMinTravelDistancePx = 192;
-  const catDistractionChance = 0.22;
+  const catDistractionChance = 0.32;
   const catDistractionDelayMinSeconds = 0.35;
   const catDistractionDelayMaxSeconds = 0.95;
   const engagementDecayPerSecond = 4;
-  const minPlaybackRate = 0.45;
+  const minPlaybackRate = 0.1;
   const maxPlaybackRate = 1;
   const rewardPlaybackBoost = 0.55;
-  const rewardPlaybackBoostDecayPerSecond = 1.8;
-  const rewardPlaybackHoldSeconds = 1.1;
+  const rewardPlaybackBoostDecayPerSecond = 3.2;
+  const rewardPlaybackHoldSeconds = 0.45;
+  const engagementGainPerCatch = 18;
 
   const body = document.body;
   const overlayContainer = document.getElementById("overlay-container");
@@ -147,7 +148,7 @@
   function rewardToyCatch() {
     playbackBoost = rewardPlaybackBoost;
     playbackBoostHoldRemaining = rewardPlaybackHoldSeconds;
-    setEngagementProgress(engagementProgress + 22);
+    setEngagementProgress(engagementProgress + engagementGainPerCatch);
     playRewardMeow();
     hasRewardedCurrentToy = true;
   }
