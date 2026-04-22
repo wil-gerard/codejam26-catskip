@@ -41,6 +41,7 @@
   const body = document.body;
   const overlayContainer = document.getElementById("overlay-container");
   const feedbackLayer = document.getElementById("feedback-layer");
+  const toyCursor = document.getElementById("toy-cursor");
   const cat = document.getElementById("cat");
   const toyBall = document.getElementById("toy-ball");
   const engagementFill = document.getElementById("engagement-fill");
@@ -79,6 +80,14 @@
 
   function hideSkipButton() {
     skipButton.style.display = "none";
+  }
+
+  function updateToyCursorPosition(clientX, clientY) {
+    const containerRect = overlayContainer.getBoundingClientRect();
+    const x = clientX - containerRect.left;
+    const y = clientY - containerRect.top;
+    toyCursor.style.left = `${x}px`;
+    toyCursor.style.top = `${y}px`;
   }
 
   function showFeedback(message, x = null) {
@@ -486,5 +495,15 @@
   overlayContainer.addEventListener("click", (event) => {
     if (!body.classList.contains("engagement-active")) return;
     dropToyBall(event.clientX, event.clientY);
+  });
+
+  overlayContainer.addEventListener("pointermove", (event) => {
+    if (!body.classList.contains("engagement-active")) return;
+    updateToyCursorPosition(event.clientX, event.clientY);
+  });
+
+  overlayContainer.addEventListener("pointerenter", (event) => {
+    if (!body.classList.contains("engagement-active")) return;
+    updateToyCursorPosition(event.clientX, event.clientY);
   });
 })(window, document);
