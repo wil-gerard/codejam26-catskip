@@ -28,11 +28,11 @@
   const catTargetSnapDistancePx = 8;
   const catToyInspectOffsetPx = 14;
   const catRewardMinTravelDistancePx = 192;
-  const catDistractionChance = 0.32;
+  const catDistractionChance = 0.25;
   const catDistractionDelayMinSeconds = 0.35;
   const catDistractionDelayMaxSeconds = 0.95;
   const engagementDecayPerSecond = 4;
-  const minPlaybackRate = 0.1;
+  const minPlaybackRate = 0.75;
   const maxPlaybackRate = 1;
   const rewardPlaybackBoost = 0.55;
   const rewardPlaybackBoostDecayPerSecond = 3.2;
