@@ -57,7 +57,12 @@
   const toyBall = document.getElementById("toy-ball");
   const engagementFill = document.getElementById("engagement-fill");
   const skipButton = document.getElementById("skip");
-  const rewardMeow = new window.Audio("./assets/Meow.ogg");
+  const rewardMeowSources = [
+    "./assets/Meow.ogg",
+    "./assets/sound_garage-cat-meow-7-fx-306186.mp3",
+    "./assets/x_bass6668-funny-meow-110120.mp3",
+  ];
+  const rewardMeows = rewardMeowSources.map((src) => new window.Audio(src));
   let skipTimerId = null;
   let catAnimationFrameId = null;
   let toyAnimationFrameId = null;
@@ -86,8 +91,10 @@
     lastTimestamp: null,
   };
 
-  rewardMeow.preload = "auto";
-  rewardMeow.volume = 0.22;
+  rewardMeows.forEach((rewardMeow) => {
+    rewardMeow.preload = "auto";
+    rewardMeow.volume = 0.5;
+  });
 
   function isEngagementActive() {
     return body.classList.contains(engagementActiveClassName);
@@ -155,6 +162,7 @@
   }
 
   function playRewardMeow() {
+    const rewardMeow = rewardMeows[Math.floor(Math.random() * rewardMeows.length)];
     rewardMeow.currentTime = 0;
     rewardMeow.play().catch(() => {});
   }
