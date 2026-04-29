@@ -35,6 +35,7 @@
   const catFrameDurationMs = 110;
   const catTargetSnapDistancePx = 8;
   const catToyInspectOffsetPx = 14;
+  const catRightToyStandOffPx = 20;
   const catRewardMinTravelDistancePx = 192;
   const catDistractionChance = 0.25;
   const catDistractionDelayMinSeconds = 0.35;
@@ -307,7 +308,7 @@
   function getCatTargetForToy(left) {
     if (left >= catX) {
       catDirection = 1;
-      return left - (cat.offsetWidth - catToyInspectOffsetPx);
+      return left - (cat.offsetWidth - catToyInspectOffsetPx) - catRightToyStandOffPx;
     }
 
     catDirection = -1;
