@@ -13,7 +13,9 @@
   const toyVisibleHeightPx = 32;
   const toyRestFrameIndex = 10;
   const toyImpactFrameStartIndex = 10;
+  const toyImpactFrameIndex = 12;
   const toyImpactFrameEndIndex = 18;
+  const toyRoundRecoveryBounceCount = 2;
   const toyGravityPxPerSecond = 1600;
   const toyBounceDamping = 0.52;
   const toyMinimumBounceVelocity = 140;
@@ -210,6 +212,7 @@
 
   function updateToyFrame() {
     const distanceToGround = Math.max(0, toyState.groundY - toyState.y);
+    const isOnGround = toyState.y >= toyState.groundY;
 
     if (distanceToGround > toyFrameHeightPx * 1.5) {
       const fallProgress = 1 - distanceToGround / Math.max(toyState.groundY, 1);
@@ -223,6 +226,21 @@
 
     if (Math.abs(toyState.velocityY) < toyMinimumBounceVelocity && toyState.y >= toyState.groundY) {
       setToyFrame(toyRestFrameIndex);
+      return;
+    }
+
+    if (!isOnGround) {
+      setToyFrame(toyRestFrameIndex);
+      return;
+    }
+
+    if (toyState.bounceCount >= toyRoundRecoveryBounceCount && toyState.velocityY < 0) {
+      setToyFrame(toyRestFrameIndex);
+      return;
+    }
+
+    if (toyState.bounceCount <= 1) {
+      setToyFrame(toyImpactFrameIndex);
       return;
     }
 
