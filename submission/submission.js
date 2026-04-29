@@ -1,11 +1,15 @@
 (function (window, document) {
+  const engagementActiveClassName = "engagement-active";
+  const feedbackTooCloseMessage = "Too close for progress";
+  const feedbackCatBoredMessage = "Cat got bored";
+
+  // Overlay timing
   const skipDelayMs = 2000;
-  const catBaseOffsetPx = 16;
-  const catSpeedPxPerSecond = 160;
+
+  // Toy physics and sprite sheet
   const groundLaneOffsetPx = 6;
   const toyFrameWidthPx = 16;
   const toyFrameHeightPx = 34;
-  const toyFrameCount = 28;
   const toyVisibleHeightPx = 32;
   const toyRestFrameIndex = 10;
   const toyImpactFrameStartIndex = 10;
@@ -14,6 +18,10 @@
   const toyBounceDamping = 0.52;
   const toyMinimumBounceVelocity = 140;
   const toyFallFrameCount = 12;
+
+  // Cat movement and animation
+  const catBaseOffsetPx = 16;
+  const catSpeedPxPerSecond = 160;
   const catIdleFrame = { x: 252, y: 0 };
   const catDistractedFrame = { x: 84, y: 0 };
   const walkFrames = [
@@ -31,6 +39,8 @@
   const catDistractionChance = 0.25;
   const catDistractionDelayMinSeconds = 0.35;
   const catDistractionDelayMaxSeconds = 0.95;
+
+  // Engagement and playback tuning
   const engagementDecayPerSecond = 4;
   const minPlaybackRate = 0.75;
   const maxPlaybackRate = 1;
@@ -79,6 +89,10 @@
   rewardMeow.preload = "auto";
   rewardMeow.volume = 0.22;
 
+  function isEngagementActive() {
+    return body.classList.contains(engagementActiveClassName);
+  }
+
   function hideSkipButton() {
     skipButton.style.display = "none";
   }
@@ -114,7 +128,7 @@
   }
 
   function sendPlaybackRate(rate) {
-    if (!body.classList.contains("engagement-active")) return;
+    if (!isEngagementActive()) return;
 
     const clampedRate = Math.max(minPlaybackRate, Math.min(maxPlaybackRate, rate));
 
@@ -151,6 +165,12 @@
     setEngagementProgress(engagementProgress + engagementGainPerCatch);
     playRewardMeow();
     hasRewardedCurrentToy = true;
+  }
+
+  function resetPlaybackState() {
+    currentPlaybackRate = 1;
+    playbackBoost = 0;
+    playbackBoostHoldRemaining = 0;
   }
 
   function setToyFrame(frameIndex) {
@@ -242,7 +262,7 @@
     }
   }
 
-  function dropToyBall(clientX, clientY) {
+  function getToyDropPosition(clientX, clientY) {
     const containerRect = overlayContainer.getBoundingClientRect();
     const left = Math.max(
       0,
@@ -259,7 +279,46 @@
       ),
     );
     const groundY = containerRect.height - toyVisibleHeightPx - groundLaneOffsetPx;
-    const toyTooClose = Math.abs(left - catX) < catRewardMinTravelDistancePx;
+
+    return { left, startY, groundY };
+  }
+
+  function canCurrentToyReward(left) {
+    return Math.abs(left - catX) >= catRewardMinTravelDistancePx;
+  }
+
+  function scheduleCatDistraction() {
+    catIsDistracted = false;
+    catDistractionTimeRemaining =
+      Math.random() < catDistractionChance
+        ? catDistractionDelayMinSeconds +
+          Math.random() * (catDistractionDelayMaxSeconds - catDistractionDelayMinSeconds)
+        : null;
+  }
+
+  function getCatTargetForToy(left) {
+    if (left >= catX) {
+      catDirection = 1;
+      return left - (cat.offsetWidth - catToyInspectOffsetPx);
+    }
+
+    catDirection = -1;
+    return left + toyFrameWidthPx - catToyInspectOffsetPx;
+  }
+
+  function clampCatTargetX(targetX) {
+    return Math.max(
+      0,
+      Math.min(
+        overlayContainer.clientWidth - cat.offsetWidth - catBaseOffsetPx * 2,
+        targetX,
+      ),
+    );
+  }
+
+  function dropToyBall(clientX, clientY) {
+    const { left, startY, groundY } = getToyDropPosition(clientX, clientY);
+    const toyCanReward = canCurrentToyReward(left);
 
     stopToyAnimation();
     toyState = {
@@ -275,33 +334,14 @@
     toyBall.style.height = `${toyFrameHeightPx}px`;
     toyBall.classList.add("is-visible");
     hasRewardedCurrentToy = false;
-    currentToyCanReward = !toyTooClose;
-    catIsDistracted = false;
-    catDistractionTimeRemaining =
-      Math.random() < catDistractionChance
-        ? catDistractionDelayMinSeconds +
-          Math.random() * (catDistractionDelayMaxSeconds - catDistractionDelayMinSeconds)
-        : null;
+    currentToyCanReward = toyCanReward;
+    scheduleCatDistraction();
     setToyFrame(0);
     renderToyBall();
-    if (left >= catX) {
-      catDirection = 1;
-      catTargetX = left - (cat.offsetWidth - catToyInspectOffsetPx);
-    } else {
-      catDirection = -1;
-      catTargetX = left + toyFrameWidthPx - catToyInspectOffsetPx;
-    }
+    catTargetX = clampCatTargetX(getCatTargetForToy(left));
 
-    catTargetX = Math.max(
-      0,
-      Math.min(
-        overlayContainer.clientWidth - cat.offsetWidth - catBaseOffsetPx * 2,
-        catTargetX,
-      ),
-    );
-
-    if (toyTooClose) {
-      showFeedback("Too close for progress", left + toyFrameWidthPx / 2);
+    if (!toyCanReward) {
+      showFeedback(feedbackTooCloseMessage, left + toyFrameWidthPx / 2);
     }
 
     toyAnimationFrameId = window.requestAnimationFrame(stepToyBall);
@@ -337,6 +377,36 @@
     cat.style.transform = "translateX(0) scaleX(1)";
   }
 
+  function getCatFacingScale() {
+    return catDirection === 1 ? -1 : 1;
+  }
+
+  function renderCatPosition() {
+    cat.style.transform = `translateX(${catX}px) scaleX(${getCatFacingScale()})`;
+  }
+
+  function finishCatApproach() {
+    catX = catTargetX;
+    catTargetX = null;
+    catIsDistracted = false;
+    catDistractionTimeRemaining = null;
+    catFrameIndex = 0;
+    renderCatFrame();
+
+    if (!hasRewardedCurrentToy && currentToyCanReward) {
+      rewardToyCatch();
+    }
+  }
+
+  function distractCat() {
+    catTargetX = null;
+    catFrameIndex = 0;
+    catIsDistracted = true;
+    catDistractionTimeRemaining = null;
+    renderCatFrame();
+    showFeedback(feedbackCatBoredMessage, catX + cat.offsetWidth / 2);
+  }
+
   function stepCat(timestamp) {
     if (lastFrameTime === null) {
       lastFrameTime = timestamp;
@@ -354,18 +424,12 @@
         catDistractionTimeRemaining -= frameDeltaSeconds;
 
         if (catDistractionTimeRemaining <= 0) {
-          catTargetX = null;
-          catFrameIndex = 0;
-          catIsDistracted = true;
-          catDistractionTimeRemaining = null;
-          renderCatFrame();
-          showFeedback("Cat got bored", catX + cat.offsetWidth / 2);
+          distractCat();
         }
       }
 
       if (catTargetX === null) {
-        const facingScale = catDirection === 1 ? -1 : 1;
-        cat.style.transform = `translateX(${catX}px) scaleX(${facingScale})`;
+        renderCatPosition();
         catAnimationFrameId = window.requestAnimationFrame(stepCat);
         return;
       }
@@ -373,29 +437,13 @@
       const deltaToTarget = catTargetX - catX;
 
       if (Math.abs(deltaToTarget) <= catTargetSnapDistancePx) {
-        catX = catTargetX;
-        catTargetX = null;
-        catIsDistracted = false;
-        catDistractionTimeRemaining = null;
-        catFrameIndex = 0;
-        renderCatFrame();
-        if (!hasRewardedCurrentToy && currentToyCanReward) {
-          rewardToyCatch();
-        }
+        finishCatApproach();
       } else {
         catDirection = deltaToTarget > 0 ? 1 : -1;
         catX += catDirection * catSpeedPxPerSecond * frameDeltaSeconds;
 
         if ((catDirection === 1 && catX > catTargetX) || (catDirection === -1 && catX < catTargetX)) {
-          catX = catTargetX;
-          catTargetX = null;
-          catIsDistracted = false;
-          catDistractionTimeRemaining = null;
-          catFrameIndex = 0;
-          renderCatFrame();
-          if (!hasRewardedCurrentToy && currentToyCanReward) {
-            rewardToyCatch();
-          }
+          finishCatApproach();
         }
       }
     }
@@ -426,8 +474,7 @@
       updatePlaybackRate();
     }
 
-    const facingScale = catDirection === 1 ? -1 : 1;
-    cat.style.transform = `translateX(${catX}px) scaleX(${facingScale})`;
+    renderCatPosition();
     catAnimationFrameId = window.requestAnimationFrame(stepCat);
   }
 
@@ -438,22 +485,18 @@
   }
 
   function enterEngagementMode() {
-    body.classList.add("engagement-active");
-    currentPlaybackRate = 1;
-    playbackBoost = 0;
-    playbackBoostHoldRemaining = 0;
+    body.classList.add(engagementActiveClassName);
+    resetPlaybackState();
     updatePlaybackRate();
     startCatAnimation();
   }
 
   function resetOverlayState() {
-    body.classList.remove("engagement-active");
+    body.classList.remove(engagementActiveClassName);
     stopCatAnimation();
     hideToyBall();
     hasCompleted = false;
-    currentPlaybackRate = 1;
-    playbackBoost = 0;
-    playbackBoostHoldRemaining = 0;
+    resetPlaybackState();
     window.top.postMessage({ type: "setPlaybackRate", value: 1 }, "*");
     setEngagementProgress(0);
     hideSkipButton();
@@ -467,7 +510,6 @@
     }, skipDelayMs);
   }
 
-  // Listen for messages from the game shell
   window.addEventListener("message", (event) => {
     if (!event.data || !event.data.type) return;
 
@@ -475,9 +517,6 @@
       scheduleSkipButton();
     }
 
-    // By default, if the user doesn't "skip" the ad before the video ends,
-    // we call fail to restart. You're welcome to replace this with a survey
-    // or other interaction instead (see examples/survey).
     if (event.data.type === "adFinished") {
       window.clearTimeout(skipTimerId);
       resetOverlayState();
@@ -485,7 +524,6 @@
     }
   });
 
-  // Your ad overlay code goes here, we've added a simple example below:
   skipButton.addEventListener("click", (event) => {
     event.stopPropagation();
     window.clearTimeout(skipTimerId);
@@ -494,17 +532,17 @@
   });
 
   overlayContainer.addEventListener("click", (event) => {
-    if (!body.classList.contains("engagement-active")) return;
+    if (!isEngagementActive()) return;
     dropToyBall(event.clientX, event.clientY);
   });
 
   overlayContainer.addEventListener("pointermove", (event) => {
-    if (!body.classList.contains("engagement-active")) return;
+    if (!isEngagementActive()) return;
     updateToyCursorPosition(event.clientX, event.clientY);
   });
 
   overlayContainer.addEventListener("pointerenter", (event) => {
-    if (!body.classList.contains("engagement-active")) return;
+    if (!isEngagementActive()) return;
     updateToyCursorPosition(event.clientX, event.clientY);
   });
 })(window, document);
