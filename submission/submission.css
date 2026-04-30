@@ -15,6 +15,7 @@ body {
   height: 100%;
   position: relative;
   overflow: hidden;
+  touch-action: manipulation;
 }
 
 #engagement-dimmer {
@@ -253,4 +254,70 @@ body.engagement-active #engagement-meter,
 body.engagement-active #cat,
 body.engagement-active #toy-cursor {
   display: block;
+}
+
+@media (max-width: 640px), (max-height: 420px), (pointer: coarse) {
+  #engagement-overlay {
+    padding: 16px;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 56px;
+  }
+
+  #engagement-copy {
+    max-width: 260px;
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  .feedback-toast {
+    bottom: 78px;
+    max-width: calc(100% - 32px);
+    padding: 9px 13px;
+    font-size: 15px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  #toy-ball,
+  #toy-cursor {
+    transform: scale(1.82);
+  }
+
+  #engagement-meter {
+    padding: 8px 10px 6px;
+  }
+
+  #engagement-label {
+    margin-bottom: 5px;
+    font-size: 14px;
+  }
+
+  #engagement-bar {
+    height: 14px;
+  }
+
+  #skip {
+    box-sizing: border-box;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    transform: none;
+    width: auto;
+    max-width: none;
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+}
+
+@media (pointer: coarse) {
+  body.engagement-active,
+  body.engagement-active #overlay-container {
+    cursor: auto;
+  }
+
+  body.engagement-active #toy-cursor {
+    display: none;
+  }
 }
