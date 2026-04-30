@@ -96,7 +96,7 @@
 
   rewardMeows.forEach((rewardMeow) => {
     rewardMeow.preload = "auto";
-    rewardMeow.volume = 0.5;
+    rewardMeow.volume = 0.3;
   });
 
   function isEngagementActive() {
