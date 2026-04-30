@@ -572,4 +572,9 @@
     if (!isEngagementActive()) return;
     updateToyCursorPosition(event.clientX, event.clientY);
   });
+
+  overlayContainer.addEventListener("pointerdown", (event) => {
+    if (!isEngagementActive()) return;
+    updateToyCursorPosition(event.clientX, event.clientY);
+  });
 })(window, document);
