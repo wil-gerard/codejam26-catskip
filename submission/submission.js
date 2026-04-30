@@ -61,9 +61,9 @@
   const engagementFill = document.getElementById("engagement-fill");
   const skipButton = document.getElementById("skip");
   const rewardMeowSources = [
-    "./assets/Meow.ogg",
-    "./assets/sound_garage-cat-meow-7-fx-306186.mp3",
-    "./assets/x_bass6668-funny-meow-110120.mp3",
+    "./assets/meow-1.ogg",
+    "./assets/meow-2.mp3",
+    "./assets/meow-3.mp3",
   ];
   const rewardMeows = rewardMeowSources.map((src) => new window.Audio(src));
   let skipTimerId = null;
